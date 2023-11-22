@@ -96,20 +96,29 @@ int main(){
 	USART0.CTRLC = 0x3;	// async mode, parity disable, 1 stop bit, 8 bit
 	USART0.CTRLB = 0x40; 	// txmit enable
 
+	// rtc
+	while(RTC.STATUS & 0x01){} // wait for ctrla to not be busy
+	RTC.CTRLA = 0x1;	// enable div1
+
 	// vr output pin
 	PORTA.DIRSET = PIN2_bm; // pa2 out
 
 	// tca0	vr output
-	TCA0.SINGLE.CMP0 = 0x8000;
-	TCA0.SINGLE.CNT = 0x0;
+	TCA0.SINGLE.CMP0 = 0xffff;
 	TCA0.SINGLE.INTCTRL = 0x10;	// int cmp0
 	TCA0.SINGLE.CTRLB = 0x01;	// freq out mode
 	TCA0.SINGLE.CTRLA = 0x3;	// enable, div2
 
-	// tcb0 input rpm strobe
+	// tcb0 pa5 input rpm strobe
+	TCB0.CTRLB = 0x05;	// input cap freq and pw
+	TCB0.CTRLA = 0x03;	// enable, div2
 
-	// tcb1 input ignition
+	// tcb1 pa3 input ignition
+	TCB0.CTRLB = 0x05;	// input cap freq and pw
+	TCB0.CTRLA = 0x03;	// enable, div2
 
+
+	// state
 	GPIOR0 = 0; // tooth count
 	GPIOR1 = 0; // 
 
