@@ -31,8 +31,7 @@ char *uint16_to_str(uint16_t n, char *dest) {
     return dest + 1;
 }
 
-
-ISR(TCB1_INT_vect){
+ISR(TCA0_CMP0_vect){
 	VPORTA.IN = PIN2_bm;
 
 	uint16_t tval = GPIOR2<<8 | GPIOR3;
@@ -82,8 +81,8 @@ ISR(TCB1_INT_vect){
 	}
 
 	GPIOR0 = tooth;
-	TCB1.CCMP = tval;
-	TCB1.INTFLAGS = 0x1;
+	TCA0.SINGLE.CMP0 = tval;
+	TCA0.SINGLE.INTFLAGS = 0x10;
 }
 
 int main(){
@@ -97,17 +96,19 @@ int main(){
 	USART0.CTRLC = 0x3;	// async mode, parity disable, 1 stop bit, 8 bit
 	USART0.CTRLB = 0x40; 	// txmit enable
 
-	//vr output pin
+	// vr output pin
 	PORTA.DIRSET = PIN2_bm; // pa2 out
 
-	// tcb1	pa3	vr output
-	PORTA.DIRSET = PIN3_bm;	// pa3 output
-	TCB1.CCMP = 0x8000;
-	TCB1.CNT = 0x0;
-	TCB1.INTCTRL = 0x1;	// capt interrupt
-	TCB1.CTRLB = 0x10;	// cmp out enable
-	TCB1.CTRLA = 0x3;	// enable, div2
+	// tca0	vr output
+	TCA0.SINGLE.CMP0 = 0x8000;
+	TCA0.SINGLE.CNT = 0x0;
+	TCA0.SINGLE.INTCTRL = 0x10;	// int cmp0
+	TCA0.SINGLE.CTRLB = 0x01;	// freq out mode
+	TCA0.SINGLE.CTRLA = 0x3;	// enable, div2
 
+	// tcb0 input rpm strobe
+
+	// tcb1 input ignition
 
 	GPIOR0 = 0; // tooth count
 	GPIOR1 = 0; // 
