@@ -31,18 +31,34 @@ char *uint16_to_str(uint16_t n, char *dest) {
     return dest + 1;
 }
 
+volatile uint16_t tdc, ignlow, ignhigh, rpmlow, rpmhigh;
+
+ISR(PORTB_PORT_vect){
+	(VPORTB.IN & 0x1) ? (rpmhigh = RTC.CNT) : (rpmlow = RTC.CNT);
+	VPORTB.INTFLAGS = 0x1;
+}
+
+ISR(PORTC_PORT_vect){
+	(VPORTC.IN & 0x1) ? (ignhigh = RTC.CNT) : (ignlow = RTC.CNT);
+	VPORTC.INTFLAGS = 0x1;
+}
+
 ISR(TCA0_CMP0_vect){
-	VPORTA.IN = PIN2_bm;
+	VPORTA.IN = PIN2_bm;	// toggle pa2
 
 	uint16_t tval = GPIOR2<<8 | GPIOR3;
 	uint8_t tooth = GPIOR0;
 /*
 	// bosch 60-2
 	switch(tooth){
-		case 115:
+		case 115: // missing tooth
 			tval = tval<<2;
 			tooth = 0;
 			break;
+		case 30: // tdc stroke a
+		case 90: // tdc stroke b
+			VPORTA.IN = PIN4_bm; // toggle pa4
+			tdc = RTC.CNT;
 		default:
 			tooth++;
 			break;
@@ -51,14 +67,19 @@ ISR(TCA0_CMP0_vect){
 /*
 	// bosch 60-2 blocked 2 windows 180deg
 	switch(tooth){
-		case 55:
+		case 55: // missing tooth (added)
 			tval = tval<<2;
 			tooth++;
 			break;
-		case 111:
+		case 111: // missing tooth
 			tval = tval<<2;
 			tooth = 0;
 			break;
+
+		case 30: // tdc stroke a
+		case 86: // tdc strobe b
+			VPORTA.IN = PIN4_bm; // toggle pa4
+			tdc = RTC.CNT;
 		default:
 			tooth++;
 			break;
@@ -67,14 +88,18 @@ ISR(TCA0_CMP0_vect){
 
 	// regina 44-2-2
 	switch(tooth){
-		case 39:
+		case 39: // missing tooth
 			tval = tval<<2;
 			tooth++;
 			break;
-		case 79:
+		case 79: // missing tooth
 			tval = tval<<2;
 			tooth = 0;
 			break;
+		case 21: // tdc stroke a
+		case 61: // tdc stroke b
+			VPORTA.IN = PIN4_bm; // toggle pa4
+			tdc = RTC.CNT;
 		default:
 			tooth++;
 			break;
@@ -100,8 +125,9 @@ int main(){
 	while(RTC.STATUS & 0x01){} // wait for ctrla to not be busy
 	RTC.CTRLA = 0x1;	// enable div1
 
-	// vr output pin
-	PORTA.DIRSET = PIN2_bm; // pa2 out
+	// outputs
+	PORTA.DIRSET = PIN2_bm; // pa2 out vr
+	PORTA.DIRSET = PIN4_bm; // pa4 out tdc
 
 	// tca0	vr output
 	TCA0.SINGLE.CMP0 = 0xffff;
@@ -109,13 +135,12 @@ int main(){
 	TCA0.SINGLE.CTRLB = 0x01;	// freq out mode
 	TCA0.SINGLE.CTRLA = 0x3;	// enable, div2
 
-	// tcb0 pa5 input rpm strobe
-	TCB0.CTRLB = 0x05;	// input cap freq and pw
-	TCB0.CTRLA = 0x03;	// enable, div2
+	// rpm pin input
+	PORTB.PIN0CTRL = 0x11;	// pb0 interrupt both edges, pull up
 
-	// tcb1 pa3 input ignition
-	TCB0.CTRLB = 0x05;	// input cap freq and pw
-	TCB0.CTRLA = 0x03;	// enable, div2
+	// ign pin input
+	PORTC.PIN0CTRL = 0x11;	// pc0 interrupt both edges, pull up
+
 
 
 	// state
