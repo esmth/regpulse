@@ -31,15 +31,35 @@ char *uint16_to_str(uint16_t n, char *dest) {
     return dest + 1;
 }
 
+volatile uint16_t tdcovf=0;
+
+ISR(RTC_CNT_vect){
+	tdcovf++;
+	RTC.INTFLAGS = 0x1;
+}
+
 volatile uint16_t tdc, ignlow, ignhigh, rpmlow, rpmhigh;
+volatile uint8_t ignlowt, ignhight, rpmlowt, rpmhight;
 
 ISR(PORTB_PORT_vect){
-	(VPORTB.IN & 0x1) ? (rpmhigh = RTC.CNT) : (rpmlow = RTC.CNT);
+	if(VPORTB.IN & 0x1){
+		rpmhigh = RTC.CNT;
+		rpmhight = GPIOR0>>1;
+	}else{
+		rpmlow = RTC.CNT;
+		rpmlowt = GPIOR0>>1;
+	}
 	VPORTB.INTFLAGS = 0x1;
 }
 
 ISR(PORTC_PORT_vect){
-	(VPORTC.IN & 0x1) ? (ignhigh = RTC.CNT) : (ignlow = RTC.CNT);
+	if(VPORTC.IN & 0x1){
+		ignhigh = RTC.CNT;
+		ignhight = GPIOR0>>1;
+	}else{
+		ignlow = RTC.CNT;
+		ignlowt = GPIOR0>>1;
+	}
 	VPORTC.INTFLAGS = 0x1;
 }
 
@@ -59,6 +79,7 @@ ISR(TCA0_CMP0_vect){
 		case 90: // tdc stroke b
 			VPORTA.IN = PIN4_bm; // toggle pa4
 			tdc = RTC.CNT;
+			GPIOR1 = 1;
 		default:
 			tooth++;
 			break;
@@ -80,6 +101,7 @@ ISR(TCA0_CMP0_vect){
 		case 86: // tdc strobe b
 			VPORTA.IN = PIN4_bm; // toggle pa4
 			tdc = RTC.CNT;
+			GPIOR1 = 1;
 		default:
 			tooth++;
 			break;
@@ -100,6 +122,7 @@ ISR(TCA0_CMP0_vect){
 		case 61: // tdc stroke b
 			VPORTA.IN = PIN4_bm; // toggle pa4
 			tdc = RTC.CNT;
+			GPIOR1 = 1;
 		default:
 			tooth++;
 			break;
@@ -123,6 +146,7 @@ int main(){
 
 	// rtc
 	while(RTC.STATUS & 0x01){} // wait for ctrla to not be busy
+	RTC.INTCTRL = 0x1;	// overflow int
 	RTC.CTRLA = 0x1;	// enable div1
 
 	// outputs
@@ -145,7 +169,7 @@ int main(){
 
 	// state
 	GPIOR0 = 0; // tooth count
-	GPIOR1 = 0; // 
+	GPIOR1 = 0; // output flag
 
 	// 420 rpm
 	// 60-2
@@ -186,22 +210,20 @@ int main(){
 	for(int i=0; i<80; i++) logmsg[i] = '0';
 
 	while(1){
-			count++;
+		count++;
 
-			continue;
-
-			// TODO how about fill the back of the buffer to the front so easier to trim unneeded zeros
+		if(GPIOR1 == 1){
 			uint32_to_str(count, logmsg); // count
-			uint16_to_str(0, &logmsg[11]); // 
-			uint16_to_str(0, &logmsg[17]); // 
-			uint16_to_str(0, &logmsg[23]); // 
-			uint16_to_str(0, &logmsg[29]); // 
-			uint16_to_str(0, &logmsg[35]); // 
-			uint16_to_str(0, &logmsg[41]); // 
-			uint16_to_str(0, &logmsg[47]); // 
-			uint16_to_str(0, &logmsg[53]); // 
-			uint16_to_str(0, &logmsg[59]); // 
-			uint16_to_str(0, &logmsg[65]); // 
+			uint16_to_str(tdcovf, &logmsg[11]); // 
+			uint16_to_str(tdc, &logmsg[17]); // 
+			uint16_to_str(rpmlow, &logmsg[23]); // 
+			uint16_to_str(rpmhigh, &logmsg[29]); // 
+			uint16_to_str(rpmlowt, &logmsg[35]); // 
+			uint16_to_str(rpmhight, &logmsg[41]); // 
+			uint16_to_str(ignlow, &logmsg[47]); // 
+			uint16_to_str(ignhigh, &logmsg[53]); // 
+			uint16_to_str(ignlowt, &logmsg[59]); // 
+			uint16_to_str(ignhight, &logmsg[65]); // 
 			uint16_to_str(0, &logmsg[71]); // 
 
 			logmsg[10] = ',';
@@ -222,6 +244,7 @@ int main(){
 
 			for(int i=0; i<80; i++) logmsg[i] = '0';
 
-		_delay_ms(100);
+			GPIOR1 = 0;
+		}
 	}
 }
