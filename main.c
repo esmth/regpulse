@@ -4,8 +4,8 @@
 #include <util/delay.h>
 
 
-void printarr(char *msg, int len){
-	for(int i=0; i<len; i++){
+void printarr(char *msg, uint8_t len){
+	for(uint8_t i=0; i<len; i++){
 		USART0.TXDATAL = msg[i];
 		while(!(USART0.STATUS & 0x20)){}
 	}
