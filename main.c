@@ -212,7 +212,7 @@ int main(){
 	while(1){
 		count++;
 
-		if(GPIOR1 == 1){
+		if(GPIOR1 & 0x01){
 			uint32_to_str(count, logmsg); // count
 			uint16_to_str(tdcovf, &logmsg[11]); // 
 			uint16_to_str(tdc, &logmsg[17]); // 
@@ -244,7 +244,7 @@ int main(){
 
 			for(int i=0; i<80; i++) logmsg[i] = '0';
 
-			GPIOR1 = 0;
+			GPIOR1 &= ~(0x01);
 		}
 	}
 }
