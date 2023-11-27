@@ -75,8 +75,8 @@ ISR(TCA0_CMP0_vect){
 			tval = tval<<2;
 			tooth = 0;
 			break;
-		case 30: // tdc stroke a
-		case 90: // tdc stroke b
+		case 29: // tdc stroke a
+		case 89: // tdc stroke b
 			VPORTA.IN = PIN4_bm; // toggle pa4
 			tdc = RTC.CNT;
 			GPIOR1 = 1;
@@ -97,8 +97,8 @@ ISR(TCA0_CMP0_vect){
 			tooth = 0;
 			break;
 
-		case 30: // tdc stroke a
-		case 86: // tdc strobe b
+		case 29: // tdc stroke a
+		case 85: // tdc strobe b
 			VPORTA.IN = PIN4_bm; // toggle pa4
 			tdc = RTC.CNT;
 			GPIOR1 = 1;
