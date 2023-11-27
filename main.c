@@ -41,24 +41,26 @@ ISR(RTC_CNT_vect){
 volatile uint16_t tdc, ignlow, ignhigh, rpmlow, rpmhigh;
 volatile uint8_t ignlowt, ignhight, rpmlowt, rpmhight;
 
+// rpm input int
 ISR(PORTB_PORT_vect){
 	if(VPORTB.IN & 0x1){
 		rpmhigh = RTC.CNT;
-		rpmhight = GPIOR0>>1;
+		rpmhight = GPIOR0;
 	}else{
 		rpmlow = RTC.CNT;
-		rpmlowt = GPIOR0>>1;
+		rpmlowt = GPIOR0;
 	}
 	VPORTB.INTFLAGS = 0x1;
 }
 
+// ign input int
 ISR(PORTC_PORT_vect){
 	if(VPORTC.IN & 0x1){
 		ignhigh = RTC.CNT;
-		ignhight = GPIOR0>>1;
+		ignhight = GPIOR0;
 	}else{
 		ignlow = RTC.CNT;
-		ignlowt = GPIOR0>>1;
+		ignlowt = GPIOR0;
 	}
 	VPORTC.INTFLAGS = 0x1;
 }
