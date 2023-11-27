@@ -210,14 +210,39 @@ int main(){
 	uint32_t count=0;
 	char logmsg[80];
 	for(int i=0; i<80; i++) logmsg[i] = '0';
+	uint16_t rpm, dwell, ignangle;
+	float tmp, speed;
 
 	while(1){
 		count++;
 
 		if(GPIOR1 & 0x01){
+			// rpm
+			speed = (((float)rpmlow-(float)rpmhigh)/32768.0)*(30.0/12.0);
+			//tmp = 30.0/((((float)rpmlow-(float)rpmhigh)/32768.0)*(30.0/12.0));
+			tmp = 30.0/speed;
+			rpm = (uint16_t)tmp;
+
+			// dwell
+			tmp = ((float)ignhigh-(float)ignlow)/0.032768;
+			dwell = (uint16_t)tmp;
+
+			// ign angle
+			//tmp = ((float)tdc-(float)ignhigh)/32768.0;
+			//tmp = (*180.0)/((((float)tdc-(float)ignhigh)/32768.0)*(30.0/12.0));
+			tmp = (((float)tdc-(float)ignhigh)*180.0)/speed;
+			ignangle = (uint16_t)tmp;
+
+
+			// process log output
 			uint32_to_str(count, logmsg); // count
 			uint16_to_str(tdcovf, &logmsg[11]); // 
 			uint16_to_str(tdc, &logmsg[17]); // 
+
+			uint16_to_str(rpm, &logmsg[23]); // 
+			uint16_to_str(dwell, &logmsg[29]); // 
+			uint16_to_str(ignangle, &logmsg[35]); // 
+/*
 			uint16_to_str(rpmlow, &logmsg[23]); // 
 			uint16_to_str(rpmhigh, &logmsg[29]); // 
 			uint16_to_str(rpmlowt, &logmsg[35]); // 
@@ -226,8 +251,8 @@ int main(){
 			uint16_to_str(ignhigh, &logmsg[53]); // 
 			uint16_to_str(ignlowt, &logmsg[59]); // 
 			uint16_to_str(ignhight, &logmsg[65]); // 
-			uint16_to_str(0, &logmsg[71]); // 
-
+			uint16_to_str(rpm, &logmsg[71]); // 
+*/
 			logmsg[10] = ',';
 			logmsg[16] = ',';
 			logmsg[22] = ',';
