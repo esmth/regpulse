@@ -5,8 +5,8 @@
 
 
 void printarr(char *msg, uint8_t len){
-	for(uint8_t i=0; i<len; i++){
-		USART0.TXDATAL = msg[i];
+	while(len--){
+		USART0.TXDATAL = *msg++;
 		while(!(USART0.STATUS & 0x20)){}
 	}
 }
