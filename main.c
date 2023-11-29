@@ -154,6 +154,7 @@ int main(){
 	// outputs
 	PORTA.DIRSET = PIN2_bm; // pa2 out vr
 	PORTA.DIRSET = PIN4_bm; // pa4 out tdc
+	//VPORTA.IN = PIN2_bm;	// toggle pa2
 
 	// tca0	vr output
 	TCA0.SINGLE.CMP0 = 0xffff;
@@ -259,6 +260,7 @@ int main(){
 			uint16_to_str(tdcovf, &logmsg[11]); // 
 			uint16_to_str(tdc, &logmsg[17]); // 
 
+/*
 			uint16_to_str(yz, &logmsg[23]); // rtc count
 			uint16_to_str(speed, &logmsg[29]); // speed fixed point
 			uint16_to_str(rpm, &logmsg[35]); // rpm
@@ -266,6 +268,7 @@ int main(){
 			uint16_to_str(ignangle, &logmsg[47]); // 
 //			uint16_to_str(0, &logmsg[53]); // 
 //			uint16_to_str(0, &logmsg[59]); // 
+*/
 /*
 			uint16_to_str(dwell, &logmsg[29]); // 
 			uint16_to_str(ignangle, &logmsg[35]); // 
